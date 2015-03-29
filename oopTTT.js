@@ -34,17 +34,21 @@ $(function() {
   // negates turn and toggles currentPlayer between "X"
   // and "O". nextPlayer returns an instance of Board.
 
-  Board.prototype.nextPlayer = (function(player) {
-    var p1 = new player();
-    var p2 = new player();
-    this.currentPlayer = p1;
-    var turn = false;
-    return function() {
-      turn = !turn;
-      this.currentPlayer = turn ? p1 : p2;
-      return this;
-    };
-  })(Player);
+Board.prototype.nextPlayer = (function(player) {
+  var p1 = new player();
+  var p2 = new player();
+  var turn = true;
+  return function() {
+    this.currentPlayer = this.currentPlayer || p1;
+    turn = !turn;
+    this.currentPlayer = turn ? p2 : p1;
+    if (arguments[0] && this.currentPlayer === p1) {
+      this.nextPlayer();
+    }
+    return this;
+  };
+})(Player);
+
 
   // Convert a array index to matrix id
   // trackMove is a function that takes in an integer
@@ -103,7 +107,7 @@ $(function() {
     var $dom = $(boardId);
     var $reset = $(resetId);
     this.initGame(board, $dom, $reset);
-    this.initReset($dom, $reset);
+    this.initReset(board, $dom, $reset);
   };
 
   // The `init` method take two parameters: an instance of a Board,
@@ -119,7 +123,8 @@ $(function() {
 
       // Fill the Dom board
       $(el).html(jsBoard.currentPlayer.symbol).addClass(jsBoard.currentPlayer.symbol).off('click');
-      if (jsBoard.winner()) {
+      var hasWinner = jsBoard.winner();
+      if (hasWinner) {
         alert(jsBoard.currentPlayer.symbol + " Has won the game");
         reset.trigger('click');
       }
@@ -127,11 +132,12 @@ $(function() {
 
   };
 
-  TicTacToe.prototype.initReset = function($dom, $reset) {
+  TicTacToe.prototype.initReset = function(jsBoard, $dom, $reset) {
     $reset.click(function(evnt) {
-      console.log('clicked');
+      jsBoard.nextPlayer(true);
       $dom.children('.box').off('click');
-      TicTacToe.new();
+      $reset.off('click');
+      TTT = TicTacToe.new();
     });
   };
 
@@ -139,6 +145,6 @@ $(function() {
     return new TicTacToe(Board,'#board','#reset');
   };
 
-  new TicTacToe(Board, '#board', '#reset');
+  var TTT = new TicTacToe(Board, '#board', '#reset');
 
 });
