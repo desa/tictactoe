@@ -1,6 +1,10 @@
 $(function() {
 
   // Define a player Constructor
+  // A Player has two attributes: a weight and a symbol.
+  // the weight is the numerical value representation of
+  // the a Player. X is 1 and O is -1.
+  // the symbol is a string representation for X and O.
 
   function Player() {
     this.weight = Player.pm;
@@ -9,18 +13,26 @@ $(function() {
     Player.pm *= -1;
   };
 
+  // Player.pm is a Class attribute that stores
+  // the weight that cycles every two 
+  // instantiations of the Player object
   Player.pm = 1;
 
-  // Define a board Constructor
+  b = Board
+  // Define a Board Constructor
+  // The Board constructor has 2 attributes: currentPlayer and scoreBoard
+  // the scoreBoard is a numerical represenation of the tictactoe board
+  // the currentPlayer attribute stores who the current player is.
   function Board() {
     this.scoreBoard = [[0,0,0],[0,0,0],[0,0,0]];
   };
 
-//  Board.prototype.init = function() {
-//  };
-//
   // Add prototype method to set who the next player is
-  // Use an ivff that intial
+  // Use an ivff that instantiates two new players, sets
+  // the currentPlayer attribute to the first player "X"
+  // declares a boolean turn, and returns a function that
+  // negates turn and toggles currentPlayer between "X"
+  // and "O". nextPlayer returns an instance of Board.
 
   Board.prototype.nextPlayer = (function(player) {
     var p1 = new player();
@@ -35,6 +47,12 @@ $(function() {
   })(Player);
 
   // Convert a array index to matrix id
+  // trackMove is a function that takes in an integer
+  // id, an array index, and converts then it to a
+  // matrix index (e.g. 0 becomes [0,0], 4 becomes [1,1])
+  // and finally assigns -1 or 1 to the appropriate location
+  // in the scoreBoard.
+  // the method returns this so we can do method chaining
 
   Board.prototype.trackMove = function(id) {
     var quot = Math.floor(id/3);
@@ -44,124 +62,83 @@ $(function() {
   };
 
   // Add a prototype method to fill in the score board
+  // fill toggles the player and tracks the move on the score board
 
   Board.prototype.fill = function(id) {
     this.nextPlayer().trackMove(id);
 
-    console.log(this.scoreBoard[0]);
-    console.log(this.scoreBoard[1]);
-    console.log(this.scoreBoard[2]);
-
   };
 
 
-  // Define a TicTacToe constructor
-  function TicTacToe(jsBoard, domBoard) {
-    var board = new jsBoard("X","O");
-    var $dom = domBoard;
-    this.init(board,$dom);
+  // Add winner method
+
+  Board.prototype.winner = function() {
+    var lines = [];
+    var dia1 = 0;
+    var dia2 = 0;
+    var isThree = false;
+
+    this.scoreBoard.forEach(function(_el,_id,_arr) {
+      var col = 0;
+      var row = 0;
+      _el.forEach(function(el,id,arr) {
+        col += _arr[_id][id];
+        row += _arr[id][_id];
+      });
+      if (Math.abs(col) == 3 || Math.abs(row) == 3) {
+        isThree = true;
+      } else {
+        dia1 += _arr[_id][_id];
+        dia2 += _arr[2-_id][2-_id];
+      }
+    });
+    return (isThree || Math.abs(dia1) === 3 || Math.abs(dia2) === 3);
   };
 
-  TicTacToe.prototype.init = function(jsBoard, domBoard) {
-    var $boxes = domBoard.children('.box');
-    $boxes.click(function(e) {
-      var el = e.target;
-      var $el = $(el);
+  // Define a TicTacToe constructor that takes in two parameters:
+  // a Board and the dom element with id #board
+  // The constructor runs its `init` method on th
+  function TicTacToe(boardConstructor, boardId, resetId) {
+    var board = new boardConstructor("X","O");
+    var $dom = $(boardId);
+    var $reset = $(resetId);
+    this.initGame(board, $dom, $reset);
+    this.initReset($dom, $reset);
+  };
 
+  // The `init` method take two parameters: an instance of a Board,
+  // and an jquery object for the dom element with id `#board`
+  TicTacToe.prototype.initGame = function(jsBoard, domBoard, reset) {
+    var $boxes = domBoard.children('.box').html('&nbsp;').removeClass('X O');
+    $boxes.click(function(evnt) {
+      var el = evnt.target;
       var id = Array.prototype.indexOf.call($boxes, el);
+
+      // Fill the javascript board
       jsBoard.fill(id);
 
-      $el.html(jsBoard.currentPlayer.symbol).addClass(jsBoard.currentPlayer.symbol);
-      $el.off('click');
+      // Fill the Dom board
+      $(el).html(jsBoard.currentPlayer.symbol).addClass(jsBoard.currentPlayer.symbol).off('click');
+      if (jsBoard.winner()) {
+        alert(jsBoard.currentPlayer.symbol + " Has won the game");
+        reset.trigger('click');
+      }
+    });
+
+  };
+
+  TicTacToe.prototype.initReset = function($dom, $reset) {
+    $reset.click(function(evnt) {
+      console.log('clicked');
+      $dom.children('.box').off('click');
+      TicTacToe.new();
     });
   };
 
-  TicTacToe.prototype.reset = function() {
+  TicTacToe.new = function() {
+    return new TicTacToe(Board,'#board','#reset');
   };
 
-
-  //b = new Board();
-  //b.init();
-  new TicTacToe(Board, $('#board'));
+  new TicTacToe(Board, '#board', '#reset');
 
 });
-
-    // Wrap all code logic inside of a jQuery function call so
-    // that all of the HTML has loaded. If we didn't do this
-    // then we wouldn't be able to grab all of the HTML elements
-    // off of the page (as they would not have loaded yet).
-    //$(function() {
-    //  // Use a immediately invoked function to create a closure
-    //  // for the turn variable. The idea is to avoid polution the
-    //  // current scope with extra variables. The return value of
-    //  // the immediately invoked function, is another function
-    //  // that returns 'X' if the `turn` variable is `true` and
-    //  // 'O' otherwise.
-    //  var currentPlayer = (function() {
-    //    // Define a scoped variable that determines which players
-    //    // turn it currently is.
-    //    var turn = false;
-    //    // Return a function that changes which players turn it is
-    //    // by negating the `turn` variable.
-    //    return function() {
-    //      // Negate the turn variable. That is if `turn` is true
-    //      // change it to `false` and if `turn` is `false` change
-    //      // it to true.
-    //      turn = !turn;
-    //      // Use a ternary operator that gives 'X' if `turn` is
-    //      // `true` and 'O' is `turn` is `false`
-    //      return turn ? 'X' : 'O';
-    //    };
-    //  })();
-    //
-    //  // Grab the div with `id='board'` and set it to a variable
-    //  // using jQuery
-    //  var $board = $('#board');
-    //  // Attach an `click` event listener to the board div
-    //  // using jQuerys `.click` method
-    //  $board.click(function(event) {
-    //    // Use the event parameter to grab the target of the 
-    //    // click event.
-    //    // Use the jQuery `$` to turn the target element into a jQuery
-    //    // HTML element
-    //    var $el = $(event.target);
-    //    // Grab the targets inner HTML using the jQuery `.html` method
-    //    var elContent = $el.html();
-    //    // Check to see if the inner HTML is '&nbsp;'
-    //    if (elContent === '&nbsp;') {
-    //      // If it is set the target elements inner HTML to be the
-    //      // current player
-    //      var player = currentPlayer();
-    //      // Set the HTML elements inner html using the same jQuery
-    //      // method that we used about to grab the elements content
-    //      $el.html(player);
-    //
-    //      // Toggle the current elements player class using jQuery's
-    //      // `.toggleClass` method.
-    //      $el.addClass(player);
-    //    } else {
-    //      // Otherwise, log that the element has already been played
-    //      console.log("That Square has been played");
-    //    }
-    //  });
-    //
-    //  // Grab the reset button by its id using jQuery
-    //  var $reset = $('#reset');
-    //
-    //  // Add `click` event listener to the reset button
-    //  // using jQuery's `click` method
-    //  $reset.click(function(event) {
-    //    // Grab all elements with `class='box'` by using
-    //    // jQuery
-    //    var $boxes = $('.box');
-    ////       // Reset the class list to be only 'box'
-    ////       // Reset the inner HTML to be 'nbsp' with jQuery's
-    //    $boxes.html('&nbsp;').removeClass('X O');
-    //    // Reset the current player to be 'X'
-    //    // NOTE: THIS IS TRICKY
-    //    if (currentPlayer() === 'X') {
-    //      currentPlayer();
-    //    }
-    //  });
-    //
-    //});
