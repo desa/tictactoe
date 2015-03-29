@@ -5,7 +5,6 @@ $(function() {
   // the weight is the numerical value representation of
   // the a Player. X is 1 and O is -1.
   // the symbol is a string representation for X and O.
-
   function Player() {
     this.weight = Player.pm;
     this.symbol = this.weight === 1 ? "X" : "O";
@@ -18,7 +17,6 @@ $(function() {
   // instantiations of the Player object
   Player.pm = 1;
 
-  b = Board
   // Define a Board Constructor
   // The Board constructor has 2 attributes: currentPlayer and scoreBoard
   // the scoreBoard is a numerical represenation of the tictactoe board
@@ -33,21 +31,20 @@ $(function() {
   // declares a boolean turn, and returns a function that
   // negates turn and toggles currentPlayer between "X"
   // and "O". nextPlayer returns an instance of Board.
-
-Board.prototype.nextPlayer = (function(player) {
-  var p1 = new player();
-  var p2 = new player();
-  var turn = true;
-  return function() {
-    this.currentPlayer = this.currentPlayer || p1;
-    turn = !turn;
-    this.currentPlayer = turn ? p2 : p1;
-    if (arguments[0] && this.currentPlayer === p1) {
-      this.nextPlayer();
-    }
-    return this;
-  };
-})(Player);
+  Board.prototype.nextPlayer = (function(player) {
+    var p1 = new player();
+    var p2 = new player();
+    var turn = true;
+    return function() {
+      this.currentPlayer = this.currentPlayer || p1;
+      turn = !turn;
+      this.currentPlayer = turn ? p2 : p1;
+      if (arguments[0] && this.currentPlayer === p1) {
+        this.nextPlayer();
+      }
+      return this;
+    };
+  })(Player);
 
 
   // Convert a array index to matrix id
@@ -57,7 +54,6 @@ Board.prototype.nextPlayer = (function(player) {
   // and finally assigns -1 or 1 to the appropriate location
   // in the scoreBoard.
   // the method returns this so we can do method chaining
-
   Board.prototype.trackMove = function(id) {
     var quot = Math.floor(id/3);
     var rem = id % 3;
@@ -67,7 +63,6 @@ Board.prototype.nextPlayer = (function(player) {
 
   // Add a prototype method to fill in the score board
   // fill toggles the player and tracks the move on the score board
-
   Board.prototype.fill = function(id) {
     this.nextPlayer().trackMove(id);
 
@@ -75,7 +70,6 @@ Board.prototype.nextPlayer = (function(player) {
 
 
   // Add winner method
-
   Board.prototype.winner = function() {
     var lines = [];
     var dia1 = 0;
@@ -132,6 +126,7 @@ Board.prototype.nextPlayer = (function(player) {
 
   };
 
+  // Initreset resets the board
   TicTacToe.prototype.initReset = function(jsBoard, $dom, $reset) {
     $reset.click(function(evnt) {
       jsBoard.nextPlayer(true);
